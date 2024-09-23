@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  ports:
+  - name: mqtt
+    port: 1883
+    protocol: TCP
+    targetPort: 1883
+    nodePort: 30101
+  - name: amqp
+    port: 5672
+    protocol: TCP
+    targetPort: 5672
+    nodePort: 30102
+  - name: management
+    port: 15672
+    protocol: TCP
+    targetPort: 15672
+    nodePort: 30103
+  selector:
+    app: rabbitmq
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: registry.xslab.co.kr/lecture/rabbitmq:3.11.15
+        ports:
+        - containerPort: 1883
+        - containerPort: 5672
+        - containerPort: 15672

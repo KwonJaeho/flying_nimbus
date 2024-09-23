@@ -1,0 +1,44 @@
+name: "SensorCluster"
+manufacturer: "flying_nimbus"
+model: "Raspberryfi5"
+labels: 
+- "temperature"
+- "humidity"
+description: "Sensor cluster providing metrics for temperature and humidity"
+
+deviceResources:
+-
+  name: "temperature"
+  isHidden: false  #is hidden is false by default so this is just making it explicit for purpose of the walkthrough demonstration
+  description: "Sensor cluster temperature values"
+  properties:
+    valueType:  "Int64"
+    readWrite: "RW"  #designates that this property can only be read and not set
+    minimum: -50
+    maximum: 100
+    defaultValue: "0"
+    attributes:  # 프로토콜별 속성 추가
+      mqtt-topic: "sensor/temp"
+      unit: "Celsius"
+-
+  name: "humidity"
+  isHidden: false
+  description: "Sensor cluster humidity values"
+  properties:
+    valueType:  "Int64"
+    readWrite: "RW"  #designates that this property can only be read and not set
+    minimum: 0
+    maximum: 100
+    defaultValue: "0"
+    attributes:  # 프로토콜별 속성 추가
+      mqtt-topic: "sensor/hum"
+      unit: "Percent"
+
+deviceCommands:
+-
+  name: "Counts"
+  readWrite: "R"
+  isHidden: false
+  resourceOperations:
+  - { deviceResource: "temperature" }
+  - { deviceResource: "humidity" }

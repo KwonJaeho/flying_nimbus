@@ -1,0 +1,189 @@
+{
+	"info": {
+		"_postman_id": "0f344c1f-2397-4385-a07a-e7ee86ec2ff5",
+		"name": "Edge-X 3.1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "15354547"
+	},
+	"item": [
+		{
+			"name": "1. 핑 통신",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": "http://{{edgex_ip}}:59880/api/v3/ping"
+			},
+			"response": []
+		},
+		{
+			"name": "2. 디바이스 프로필 생성",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/home/hwj/snap/postman/248/Postman/files/sensorClusterDeviceProfile.yaml"
+						}
+					]
+				},
+				"url": "http://{{edgex_ip}}:59881/api/v3/deviceprofile/uploadfile"
+			},
+			"response": []
+		},
+		{
+			"name": "3. 디바이스 프로필 확인",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": "http://{{edgex_ip}}:59881/api/v3/deviceprofile/all"
+			},
+			"response": []
+		},
+		{
+			"name": "4. 특정 디바이스 프로필 확인",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{edgex_ip}}:59881/api/v3/deviceprofile/name/SensorCluster"
+			},
+			"response": []
+		},
+		{
+			"name": "5. 디바이스 생성",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "    [\n        {\n            \"apiVersion\" : \"v3\",\n            \"device\": {\n                \"name\": \"Temp_and_Humidity_sensor_cluster_01\",\n                \"description\": \"VORA-Kit\",\n                \"adminState\": \"UNLOCKED\",\n                \"operatingState\": \"UP\",\n                \"labels\": [\n                    \"temperature\",\n                    \"humidity\"\n                ],\n                \"location\": \"Seoul\",\n                \"serviceName\": \"device-rest\",\n                \"profileName\": \"SensorCluster\",\n                \"protocols\": {\n                    \"example\": {\n                        \"host\": \"dummy\",\n                        \"port\": \"1234\",\n                        \"unitID\": \"1\"\n                    }\n                }\n            }\n        }\n    ]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{edgex_ip}}:59881/api/v3/device"
+			},
+			"response": []
+		},
+		{
+			"name": "6. 디바이스 확인",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{edgex_ip}}:59881/api/v3/device/all"
+			},
+			"response": []
+		},
+		{
+			"name": "7. 특정 디바이스 확인",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{edgex_ip}}:59881/api/v3/device/name/Temp_and_Humidity_sensor_cluster_01"
+			},
+			"response": []
+		},
+		{
+			"name": "8. 온도 데이터 입력 테스트",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "30",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{edgex_ip}}:59986/api/v3/resource/Temp_and_Humidity_sensor_cluster_01/temperature"
+			},
+			"response": []
+		},
+		{
+			"name": "9. 이벤트 카운터 확인",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{edgex_ip}}:59880/api/v3/event/count/device/name/Temp_and_Humidity_sensor_cluster_01"
+			},
+			"response": []
+		},
+		{
+			"name": "10. 센서 데이터 확인",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://{{edgex_ip}}:59880/api/v3/reading/device/name/Temp_and_Humidity_sensor_cluster_01"
+			},
+			"response": []
+		},
+		{
+			"name": "11. 스트림 생성",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sql\": \"create stream edgex_tutorial() WITH (FORMAT=\\\"JSON\\\", TYPE=\\\"edgex\\\")\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{edgex_ip}}:59720/streams"
+			},
+			"response": []
+		},
+		{
+			"name": "12. 룰 생성",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"temphum\",\n    \"sql\": \"SELECT * FROM edgex_tutorial\",\n    \"actions\": [\n        {\n        \"mqtt\": {\n            \"server\": \"tcp://{{k8s_master_ip}}:30101\",\n            \"topic\": \"temphum\"\n        }\n    },\n    {\n        \"log\":{}\n    }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://{{edgex_ip}}:59720/rules"
+			},
+			"response": []
+		}
+	]
+}
