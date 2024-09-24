@@ -1,0 +1,300 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    checksum/config: 436aa2c9ffd7351208ff7521193ad4157a305f398ae6a38e27fa311277247d06
+  creationTimestamp: "2024-09-24T10:43:27Z"
+  generateName: test-jenkins-
+  labels:
+    app.kubernetes.io/component: jenkins-controller
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: jenkins
+    apps.kubernetes.io/pod-index: "0"
+    controller-revision-hash: test-jenkins-dcf79d98c
+    statefulset.kubernetes.io/pod-name: test-jenkins-0
+  name: test-jenkins-0
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: StatefulSet
+    name: test-jenkins
+    uid: 9c03b77b-2a8b-4df0-a16f-e53659ac0e08
+  resourceVersion: "27058"
+  uid: 51d6c2a7-a3fa-4849-8593-7bf61371f223
+spec:
+  containers:
+  - args:
+    - --httpPort=8080
+    env:
+    - name: SECRETS
+      value: /run/secrets/additional
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: JAVA_OPTS
+      value: '-Dcasc.reload.token=$(POD_NAME) '
+    - name: JENKINS_OPTS
+      value: '--webroot=/var/jenkins_cache/war '
+    - name: JENKINS_SLAVE_AGENT_PORT
+      value: "50000"
+    - name: CASC_JENKINS_CONFIG
+      value: /var/jenkins_home/casc_configs
+    image: docker.io/jenkins/jenkins:2.462.2-jdk17
+    imagePullPolicy: Always
+    livenessProbe:
+      failureThreshold: 5
+      httpGet:
+        path: /login
+        port: http
+        scheme: HTTP
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    name: jenkins
+    ports:
+    - containerPort: 8080
+      name: http
+      protocol: TCP
+    - containerPort: 50000
+      name: agent-listener
+      protocol: TCP
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /login
+        port: http
+        scheme: HTTP
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsGroup: 1000
+      runAsUser: 1000
+    startupProbe:
+      failureThreshold: 12
+      httpGet:
+        path: /login
+        port: http
+        scheme: HTTP
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/jenkins_home
+      name: jenkins-home
+    - mountPath: /var/jenkins_config
+      name: jenkins-config
+      readOnly: true
+    - mountPath: /usr/share/jenkins/ref/plugins/
+      name: plugin-dir
+    - mountPath: /var/jenkins_home/casc_configs
+      name: sc-config-volume
+    - mountPath: /run/secrets/additional
+      name: jenkins-secrets
+      readOnly: true
+    - mountPath: /var/jenkins_cache
+      name: jenkins-cache
+    - mountPath: /tmp
+      name: tmp-volume
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-bxc26
+      readOnly: true
+  - env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: LABEL
+      value: test-jenkins-jenkins-config
+    - name: FOLDER
+      value: /var/jenkins_home/casc_configs
+    - name: NAMESPACE
+      value: default
+    - name: REQ_URL
+      value: http://localhost:8080/reload-configuration-as-code/?casc-reload-token=$(POD_NAME)
+    - name: REQ_METHOD
+      value: POST
+    - name: REQ_RETRY_CONNECT
+      value: "10"
+    image: docker.io/kiwigrid/k8s-sidecar:1.27.6
+    imagePullPolicy: IfNotPresent
+    name: config-reload
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/jenkins_home/casc_configs
+      name: sc-config-volume
+    - mountPath: /var/jenkins_home
+      name: jenkins-home
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-bxc26
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: false
+  hostname: test-jenkins-0
+  initContainers:
+  - env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: LABEL
+      value: test-jenkins-jenkins-config
+    - name: FOLDER
+      value: /var/jenkins_home/casc_configs
+    - name: NAMESPACE
+      value: default
+    - name: METHOD
+      value: LIST
+    image: docker.io/kiwigrid/k8s-sidecar:1.27.6
+    imagePullPolicy: IfNotPresent
+    name: config-reload-init
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/jenkins_home/casc_configs
+      name: sc-config-volume
+    - mountPath: /var/jenkins_home
+      name: jenkins-home
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-bxc26
+      readOnly: true
+  - command:
+    - sh
+    - /var/jenkins_config/apply_config.sh
+    image: docker.io/jenkins/jenkins:2.462.2-jdk17
+    imagePullPolicy: Always
+    name: init
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4Gi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsGroup: 1000
+      runAsUser: 1000
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/jenkins_home
+      name: jenkins-home
+    - mountPath: /var/jenkins_config
+      name: jenkins-config
+    - mountPath: /usr/share/jenkins/ref/plugins
+      name: plugins
+    - mountPath: /var/jenkins_plugins
+      name: plugin-dir
+    - mountPath: /tmp
+      name: tmp-volume
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-bxc26
+      readOnly: true
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccount: test-jenkins
+  serviceAccountName: test-jenkins
+  subdomain: test-jenkins
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - emptyDir: {}
+    name: plugins
+  - configMap:
+      defaultMode: 420
+      name: test-jenkins
+    name: jenkins-config
+  - emptyDir: {}
+    name: plugin-dir
+  - name: jenkins-secrets
+    projected:
+      defaultMode: 420
+      sources:
+      - secret:
+          items:
+          - key: jenkins-admin-user
+            path: chart-admin-username
+          - key: jenkins-admin-password
+            path: chart-admin-password
+          name: test-jenkins
+  - emptyDir: {}
+    name: jenkins-cache
+  - name: jenkins-home
+    persistentVolumeClaim:
+      claimName: test-jenkins
+  - emptyDir: {}
+    name: sc-config-volume
+  - emptyDir: {}
+    name: tmp-volume
+  - name: kube-api-access-bxc26
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2024-09-24T10:43:27Z"
+    message: '0/3 nodes are available: pod has unbound immediate PersistentVolumeClaims.
+      preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.'
+    reason: Unschedulable
+    status: "False"
+    type: PodScheduled
+  phase: Pending
+  qosClass: Burstable
